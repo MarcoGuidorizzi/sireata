@@ -48,36 +48,54 @@ public class AnexoDAO {
 	
 	public int salvar(Anexo anexo) throws SQLException{
 		boolean insert = (anexo.getIdAnexo() == 0);
-		Connection conn = null;
-		PreparedStatement stmt = null;
-		ResultSet rs = null;
+		// Colocando INSERT e UPDATE em funções separadas para melhor entendimento do código
+		if (insert) {
+			return insert(anexo);
+		} else {
+			return update(anexo);
+		}
+	}
 		
-		try{
-			conn = ConnectionDAO.getInstance().getConnection();
-		
-			if(insert){
-				stmt = conn.prepareStatement("INSERT INTO anexos(idAta, ordem, descricao, arquivo) VALUES(?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
-			}else{
-				stmt = conn.prepareStatement("UPDATE anexos SET idAta=?, ordem=?, descricao=?, arquivo=? WHERE idAnexo=?");
-			}
-			
+	private int insert(Anexo anexo) throws SQLException {
+		try(
+			Connection conn = ConnectionDAO.getInstance().getConnection();
+			PreparedStatement stmt = conn.prepareStatement("INSERT INTO anexos(idAta, ordem, descricao, arquivo) VALUES(?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+		){
 			stmt.setInt(1, anexo.getAta().getIdAta());
 			stmt.setInt(2, anexo.getOrdem());
 			stmt.setString(3, anexo.getDescricao());
 			stmt.setBytes(4, anexo.getArquivo());
-			
-			if(!insert){
-				stmt.setInt(5, anexo.getIdAnexo());
+
+			int rows = stmt.executeUpdate();
+			if(rows == 0){
+				throw new SQLException("Falha ao inserir no banco.");
 			}
-			
-			stmt.execute();
-			
-			if(insert){
-				rs = stmt.getGeneratedKeys();
-				
+
+			try(
+				ResultSet rs = stmt.getGeneratedKeys();
+			){
 				if(rs.next()){
 					anexo.setIdAnexo(rs.getInt(1));
 				}
+				return anexo.getIdAnexo();
+			}
+		}
+	}
+
+	private int update(Anexo anexo) throws SQLException {
+		try(
+			Connection conn = ConnectionDAO.getInstance().getConnection();
+			PreparedStatement stmt = conn.prepareStatement("UPDATE anexos SET idAta=?, ordem=?, descricao=?, arquivo=? WHERE idAnexo=?");
+		){
+			stmt.setInt(1, anexo.getAta().getIdAta());
+			stmt.setInt(2, anexo.getOrdem());
+			stmt.setString(3, anexo.getDescricao());
+			stmt.setBytes(4, anexo.getArquivo());
+			stmt.setInt(5, anexo.getIdAnexo());
+
+			int rows = stmt.executeUpdate();
+			if(rows == 0){
+				throw new SQLException("Falha ao fazer update no banco, id não encontrado.");
 			}
 			
 			return anexo.getIdAnexo();
