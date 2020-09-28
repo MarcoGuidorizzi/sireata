@@ -13,48 +13,33 @@ import br.edu.utfpr.dv.sireata.model.AtaParticipante;
 public class AtaParticipanteDAO {
 	
 	public AtaParticipante buscarPorId(int id) throws SQLException{
-		Connection conn = null;
-		PreparedStatement stmt = null;
-		ResultSet rs = null;
-		
-		try{
-			conn = ConnectionDAO.getInstance().getConnection();
-			stmt = conn.prepareStatement("SELECT ataparticipantes.*, usuarios.nome AS nomeParticipante FROM ataparticipantes " +
+		String sql = "SELECT ataparticipantes.*, usuarios.nome AS nomeParticipante FROM ataparticipantes " +
 				"INNER JOIN usuarios ON usuarios.idUsuario=ataparticipantes.idUsuario " +
-				"WHERE idAtaParticipante = ?");
+				"WHERE idAtaParticipante = ?";
 		
-			stmt.setInt(1, id);
-			
-			rs = stmt.executeQuery();
-			
+		try(
+			Connection conn = ConnectionDAO.getInstance().getConnection();
+			PreparedStatement stmt = conn.prepareStatement(sql);
+			ResultSet rs = stmt.setInt(1, id).executeQuery();
+		){
 			if(rs.next()){
 				return this.carregarObjeto(rs);
 			}else{
 				return null;
 			}
-		}finally{
-			if((rs != null) && !rs.isClosed())
-				rs.close();
-			if((stmt != null) && !stmt.isClosed())
-				stmt.close();
-			if((conn != null) && !conn.isClosed())
-				conn.close();
 		}
 	}
 	
 	public List<AtaParticipante> listarPorAta(int idAta) throws SQLException{
-		Connection conn = null;
-		Statement stmt = null;
-		ResultSet rs = null;
-		
-		try{
-			conn = ConnectionDAO.getInstance().getConnection();
-			stmt = conn.createStatement();
-		
-			rs = stmt.executeQuery("SELECT ataparticipantes.*, usuarios.nome AS nomeParticipante FROM ataparticipantes " +
+		String sql = "SELECT ataparticipantes.*, usuarios.nome AS nomeParticipante FROM ataparticipantes " +
 				"INNER JOIN usuarios ON usuarios.idUsuario=ataparticipantes.idUsuario " + 
-				"WHERE idAta=" + String.valueOf(idAta) + " ORDER BY usuarios.nome");
-		
+				"WHERE idAta = ? ORDER BY usuarios.nome";
+
+		try(
+			Connection conn = ConnectionDAO.getInstance().getConnection();
+			PreparedStatement stmt = conn.prepareStatement(sql);
+			ResultSet rs = stmt.setInt(1, idAta).executeQuery();
+		){
 			List<AtaParticipante> list = new ArrayList<AtaParticipante>();
 			
 			while(rs.next()){
@@ -62,13 +47,6 @@ public class AtaParticipanteDAO {
 			}
 			
 			return list;
-		}finally{
-			if((rs != null) && !rs.isClosed())
-				rs.close();
-			if((stmt != null) && !stmt.isClosed())
-				stmt.close();
-			if((conn != null) && !conn.isClosed())
-				conn.close();
 		}
 	}
 	
@@ -120,19 +98,14 @@ public class AtaParticipanteDAO {
 	}
 	
 	public void excluir(int id) throws SQLException{
-		Connection conn = null;
-		Statement stmt = null;
-		
-		try{
-			conn = ConnectionDAO.getInstance().getConnection();
-			stmt = conn.createStatement();
-		
-			stmt.execute("DELETE FROM ataparticipantes WHERE idAtaParticipante=" + String.valueOf(id));
-		}finally{
-			if((stmt != null) && !stmt.isClosed())
-				stmt.close();
-			if((conn != null) && !conn.isClosed())
-				conn.close();
+		String sql = "DELETE FROM ataparticipantes WHERE idAtaParticipante = ?";
+
+		try(
+			Connection conn = ConnectionDAO.getInstance().getConnection();
+			PreparedStatement stmt = conn.prepareStatement(sql);
+		){
+			stmt.setInt(1, id)
+			int rs = stmt.executeUpdate();
 		}
 	}
 	

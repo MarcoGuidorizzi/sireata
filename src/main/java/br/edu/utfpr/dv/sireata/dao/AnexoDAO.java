@@ -13,46 +13,29 @@ import br.edu.utfpr.dv.sireata.model.Anexo;
 public class AnexoDAO {
 	
 	public Anexo buscarPorId(int id) throws SQLException{
-		Connection conn = null;
-		PreparedStatement stmt = null;
-		ResultSet rs = null;
-		
-		try{
-			conn = ConnectionDAO.getInstance().getConnection();
-			stmt = conn.prepareStatement("SELECT anexos.* FROM anexos " +
-				"WHERE idAnexo = ?");
-		
-			stmt.setInt(1, id);
-			
-			rs = stmt.executeQuery();
-			
+		String sql = "SELECT anexos.* FROM anexos WHERE idAnexo = ?";
+
+		try(
+			Connection conn = ConnectionDAO.getInstance().getConnection();
+			PreparedStatement stmt = conn.prepareStatement(sql);
+			ResultSet rs = stmt.setInt(1, id).executeQuery();
+		){
 			if(rs.next()){
 				return this.carregarObjeto(rs);
 			}else{
 				return null;
 			}
-		}finally{
-			if((rs != null) && !rs.isClosed())
-				rs.close();
-			if((stmt != null) && !stmt.isClosed())
-				stmt.close();
-			if((conn != null) && !conn.isClosed())
-				conn.close();
 		}
 	}
 	
 	public List<Anexo> listarPorAta(int idAta) throws SQLException{
-		Connection conn = null;
-		Statement stmt = null;
-		ResultSet rs = null;
-		
-		try{
-			conn = ConnectionDAO.getInstance().getConnection();
-			stmt = conn.createStatement();
-		
-			rs = stmt.executeQuery("SELECT anexos.* FROM anexos " +
-				"WHERE idAta=" + String.valueOf(idAta) + " ORDER BY anexos.ordem");
-		
+		String sql = "SELECT anexos.* FROM anexos WHERE idAta = ? ORDER BY anexos.ordem"
+
+		try(
+			Connection conn = ConnectionDAO.getInstance().getConnection();
+			PreparedStatement stmt = conn.prepareStatement(sql);
+			ResultSet rs = stmt.setInt(1, idAta).executeQuery();
+		){
 			List<Anexo> list = new ArrayList<Anexo>();
 			
 			while(rs.next()){
@@ -60,13 +43,6 @@ public class AnexoDAO {
 			}
 			
 			return list;
-		}finally{
-			if((rs != null) && !rs.isClosed())
-				rs.close();
-			if((stmt != null) && !stmt.isClosed())
-				stmt.close();
-			if((conn != null) && !conn.isClosed())
-				conn.close();
 		}
 	}
 	
@@ -105,30 +81,18 @@ public class AnexoDAO {
 			}
 			
 			return anexo.getIdAnexo();
-		}finally{
-			if((rs != null) && !rs.isClosed())
-				rs.close();
-			if((stmt != null) && !stmt.isClosed())
-				stmt.close();
-			if((conn != null) && !conn.isClosed())
-				conn.close();
 		}
 	}
 	
 	public void excluir(int id) throws SQLException{
-		Connection conn = null;
-		Statement stmt = null;
+		String sql = "DELETE FROM anexos WHERE idanexo=?"
 		
-		try{
-			conn = ConnectionDAO.getInstance().getConnection();
-			stmt = conn.createStatement();
-		
-			stmt.execute("DELETE FROM anexos WHERE idanexo=" + String.valueOf(id));
-		}finally{
-			if((stmt != null) && !stmt.isClosed())
-				stmt.close();
-			if((conn != null) && !conn.isClosed())
-				conn.close();
+		try(
+			Connection conn = ConnectionDAO.getInstance().getConnection();
+			PreparedStatement stmt = conn.prepareStatement(sql);
+		){
+			stmt.setInt(1, id)
+			int rs = stmt.executeUpdate();
 		}
 	}
 	
